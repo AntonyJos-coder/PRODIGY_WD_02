@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .stopwatch {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .time-display {
+            font-size: 48px;
+            font-family: monospace;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .pause-btn {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .reset-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .lap-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .laps {
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            margin-top: 20px;
+        }
+        
+        .lap-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="stopwatch">
+        <h1>Stopwatch</h1>
+        
+        <div class="time-display" id="timeDisplay">
+            00:00:00<span id="milliseconds">.000</span>
+        </div>
+        
+        <div class="controls">
+            <button class="start-btn" id="startBtn">Start</button>
+            <button class="pause-btn" id="pauseBtn" disabled>Pause</button>
+            <button class="reset-btn" id="resetBtn" disabled>Reset</button>
+            <button class="lap-btn" id="lapBtn" disabled>Lap</button>
+        </div>
+        
+        <div class="laps">
+            <h3>Lap Times</h3>
+            <ul id="lapList"></ul>
+        </div>
+    </div>
+
+    <script>
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval = null;
+        let isRunning = false;
+        let lapCount = 0;
+        
+        const timeDisplay = document.getElementById('timeDisplay');
+        const millisecondsDisplay = document.getElementById('milliseconds');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const lapList = document.getElementById('lapList');
+        
+        function formatTime(ms) {
+            let hours = Math.floor(ms / 3600000);
+            let minutes = Math.floor((ms % 3600000) / 60000);
+            let seconds = Math.floor((ms % 60000) / 1000);
+            let milliseconds = Math.floor((ms % 1000));
+            
+            return {
+                hours: hours.toString().padStart(2, '0'),
+                minutes: minutes.toString().padStart(2, '0'),
+                seconds: seconds.toString().padStart(2, '0'),
+                milliseconds: milliseconds.toString().padStart(3, '0')
+            };
+        }
+        
+        function updateDisplay() {
+            const time = formatTime(elapsedTime);
+            timeDisplay.innerHTML = `${time.hours}:${time.minutes}:${time.seconds}<span id="milliseconds">.${time.milliseconds}</span>`;
+        }
+        
+        function startTimer() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    updateDisplay();
+                }, 10);
+                isRunning = true;
+                
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                resetBtn.disabled = false;
+                lapBtn.disabled = false;
+            }
+        }
+        
+        function pauseTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            elapsedTime = 0;
+            updateDisplay();
+            lapList.innerHTML = '';
+            lapCount = 0;
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = true;
+            lapBtn.disabled = true;
+        }
+        
+        function recordLap() {
+            if (isRunning) {
+                lapCount++;
+                const time = formatTime(elapsedTime);
+                const lapTime = `${time.hours}:${time.minutes}:${time.seconds}.${time.milliseconds}`;
+                
+                const li = document.createElement('li');
+                li.className = 'lap-item';
+                li.textContent = `Lap ${lapCount}: ${lapTime}`;
+                lapList.prepend(li);
+            }
+        }
+        
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        lapBtn.addEventListener('click', recordLap);
+        
+        updateDisplay();
+    </script>
+</body>
+</html>
